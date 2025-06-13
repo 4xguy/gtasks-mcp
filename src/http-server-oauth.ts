@@ -12,10 +12,21 @@ app.use(express.json());
 const tasks = google.tasks("v1");
 
 // OAuth2 configuration
+// Support multiple redirect URI patterns
+const getRedirectUri = () => {
+  if (process.env.GOOGLE_REDIRECT_URI) {
+    return process.env.GOOGLE_REDIRECT_URI;
+  }
+  const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN 
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` 
+    : 'http://localhost:3000';
+  return `${baseUrl}/callback`; // Use /callback as default to match Google's redirect
+};
+
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI || `${process.env.RAILWAY_PUBLIC_DOMAIN || 'http://localhost:3000'}/auth/google/callback`
+  getRedirectUri()
 );
 
 // Store auth tokens in memory (use Redis/database in production)
@@ -148,7 +159,8 @@ app.get('/auth/google', (req, res) => {
   res.redirect(authUrl);
 });
 
-app.get('/auth/google/callback', async (req, res) => {
+// Support multiple callback paths for flexibility
+const handleOAuthCallback = async (req: any, res: any) => {
   try {
     const { code, state } = req.query;
     
@@ -234,7 +246,12 @@ app.get('/auth/google/callback', async (req, res) => {
     console.error('OAuth callback error:', error);
     res.status(500).json({ error: 'Authentication failed' });
   }
-});
+};
+
+// Register multiple callback routes to handle different configurations
+app.get('/auth/google/callback', handleOAuthCallback);
+app.get('/callback', handleOAuthCallback);  // Support root-level callback
+app.get('/oauth2/callback', handleOAuthCallback);  // Support oauth2-proxy style
 
 // Protected routes (same as before but with auth middleware)
 app.get('/tasks', requireAuth, async (req, res) => {
@@ -382,14 +399,38 @@ app.post('/tasks/clear', requireAuth, async (req, res) => {
   }
 });
 
+// Catch-all route for debugging
+app.get('*', (req, res) => {
+  res.status(404).json({
+    error: 'Not found',
+    path: req.path,
+    availableRoutes: [
+      '/',
+      '/health',
+      '/auth/google',
+      '/callback',
+      '/auth/google/callback',
+      '/oauth2/callback',
+      '/tasks',
+      '/tasks/search',
+      '/tasks/:id'
+    ]
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Google Tasks OAuth HTTP server running on port ${PORT}`);
-  console.log(`OAuth callback URL: ${process.env.GOOGLE_REDIRECT_URI || 'Not set - will use default'}`);
+  console.log(`OAuth redirect URI: ${getRedirectUri()}`);
+  console.log(`Accepting callbacks on: /callback, /auth/google/callback, /oauth2/callback`);
   
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     console.warn('WARNING: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set!');
+  }
+  
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    console.log(`Railway domain detected: ${process.env.RAILWAY_PUBLIC_DOMAIN}`);
   }
 });
