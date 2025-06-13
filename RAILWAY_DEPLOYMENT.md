@@ -6,7 +6,21 @@ This guide explains how to deploy the Google Tasks MCP Server to Railway.com.
 
 1. A Railway account
 2. Google Cloud OAuth credentials (from the setup steps in README.md)
-3. Your Google Tasks API authentication credentials
+3. Google Tasks API enabled in your Google Cloud project
+
+## Authentication Options
+
+This server supports two authentication methods:
+
+### Option 1: Service Account Credentials (Original Method)
+- Uses pre-authorized credentials stored as environment variable
+- Suitable for server-to-server applications
+- No user interaction required after initial setup
+
+### Option 2: OAuth2 Web Flow (New Method)
+- Users authenticate via Google OAuth
+- Suitable for multi-user applications
+- Each user authenticates with their own Google account
 
 ## Deployment Steps
 
@@ -30,9 +44,15 @@ First, you need to obtain your Google OAuth credentials:
 
 ### 3. Configure Environment Variables
 
-In your Railway project settings, add the following environment variable:
+Choose your authentication method:
 
+#### For Option 1 (Service Account Credentials):
 - `GOOGLE_TASKS_CREDENTIALS`: Paste the entire JSON content from your `.gtasks-server-credentials.json` file
+
+#### For Option 2 (OAuth2 Web Flow):
+- `GOOGLE_CLIENT_ID`: Your OAuth Client ID from Google Cloud Console
+- `GOOGLE_CLIENT_SECRET`: Your OAuth Client Secret from Google Cloud Console
+- `GOOGLE_REDIRECT_URI`: `https://your-app.up.railway.app/auth/google/callback` (optional, auto-detected)
 
 The JSON should look something like:
 ```json
@@ -46,6 +66,10 @@ The JSON should look something like:
 ```
 
 ### 4. Deploy to Railway
+
+#### For OAuth2 deployment:
+1. Update `railway.json` to use `Dockerfile.railway-oauth`
+2. Ensure your Google OAuth redirect URI includes your Railway URL
 
 #### Option A: Using Railway CLI
 ```bash
@@ -73,6 +97,22 @@ Once deployed, Railway will provide you with a URL. Your API endpoints will be a
 - `POST https://your-app.railway.app/tasks/clear` - Clear completed tasks
 
 ## API Usage Examples
+
+### For OAuth2 Web Flow:
+
+1. First authenticate:
+   ```bash
+   # Visit in browser
+   https://your-app.railway.app/auth/google
+   ```
+
+2. After authentication, use the sessionId in your requests:
+   ```bash
+   curl https://your-app.railway.app/tasks \
+     -H "X-Session-ID: your-session-id"
+   ```
+
+### For Service Account (Original Method):
 
 ### List all tasks
 ```bash

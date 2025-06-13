@@ -1,0 +1,20 @@
+# Railway OAuth deployment Dockerfile
+FROM node:18-alpine
+
+# Set the working directory
+WORKDIR /app
+
+# Copy all files
+COPY . .
+
+# Install dependencies and build
+RUN npm ci && npm run build
+
+# Remove dev dependencies
+RUN npm prune --production
+
+# Expose the port
+EXPOSE 3000
+
+# Run the OAuth HTTP server
+CMD ["node", "dist/http-server-oauth.js"]

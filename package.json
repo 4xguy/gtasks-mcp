@@ -19,7 +19,8 @@
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "start:http": "node dist/http-server.js",
-    "start:railway": "node dist/http-server.js"
+    "start:railway": "node dist/http-server.js",
+    "start:oauth": "node dist/http-server-oauth.js"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
