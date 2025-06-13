@@ -22,7 +22,8 @@
     "start:railway": "node dist/http-server.js",
     "start:oauth": "node dist/http-server-oauth.js",
     "start:proxy": "node dist/mcp-proxy.js",
-    "start:sse": "node dist/mcp-sse-oauth.js"
+    "start:sse": "node dist/mcp-sse-oauth.js",
+    "start:proxy-backend": "node dist/http-server-behind-proxy.js"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",

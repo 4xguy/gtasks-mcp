@@ -1,0 +1,19 @@
+# Railway deployment behind OAuth2 Proxy
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy all files
+COPY . .
+
+# Install dependencies and build
+RUN npm ci && npm run build
+
+# Remove dev dependencies
+RUN npm prune --production
+
+# Expose port 8080 for OAuth2 Proxy upstream
+EXPOSE 8080
+
+# Run the proxy backend server
+CMD ["node", "dist/http-server-behind-proxy.js"]
