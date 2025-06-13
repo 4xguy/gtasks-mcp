@@ -39,6 +39,92 @@ function requireAuth(req: any, res: any, next: any) {
   next();
 }
 
+// Root endpoint - landing page
+app.get('/', (req, res) => {
+  const baseUrl = `https://${req.get('host')}`;
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Google Tasks API Server</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          max-width: 800px;
+          margin: 50px auto;
+          padding: 20px;
+          background-color: #f5f5f5;
+        }
+        .container {
+          background: white;
+          padding: 30px;
+          border-radius: 10px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .auth-button {
+          display: inline-block;
+          padding: 10px 20px;
+          background-color: #4285f4;
+          color: white;
+          text-decoration: none;
+          border-radius: 5px;
+          margin-top: 20px;
+        }
+        .auth-button:hover {
+          background-color: #357ae8;
+        }
+        code {
+          background: #f0f0f0;
+          padding: 2px 5px;
+          border-radius: 3px;
+        }
+        pre {
+          background: #f0f0f0;
+          padding: 15px;
+          border-radius: 5px;
+          overflow-x: auto;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Google Tasks API Server</h1>
+        <p>This server provides REST API access to Google Tasks.</p>
+        
+        <h2>Getting Started</h2>
+        <ol>
+          <li>Click the button below to authenticate with Google</li>
+          <li>After authentication, you'll receive a session ID</li>
+          <li>Use the session ID in your API requests</li>
+        </ol>
+        
+        <a href="/auth/google" class="auth-button">Authenticate with Google</a>
+        
+        <h2>API Endpoints</h2>
+        <ul>
+          <li><code>GET /tasks</code> - List all tasks</li>
+          <li><code>GET /tasks/search?q=query</code> - Search tasks</li>
+          <li><code>GET /tasks/:id</code> - Get a specific task</li>
+          <li><code>POST /tasks</code> - Create a new task</li>
+          <li><code>PUT /tasks/:id</code> - Update a task</li>
+          <li><code>DELETE /tasks/:id</code> - Delete a task</li>
+          <li><code>POST /tasks/clear</code> - Clear completed tasks</li>
+        </ul>
+        
+        <h2>Authentication</h2>
+        <p>After authenticating, include your session ID in requests:</p>
+        <pre>curl ${baseUrl}/tasks \\
+  -H "X-Session-ID: your-session-id"</pre>
+        
+        <h2>Status</h2>
+        <p>Service Status: <a href="/health">/health</a></p>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
@@ -73,13 +159,77 @@ app.get('/auth/google/callback', async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code as string);
     authTokens.set(state as string, tokens);
     
-    // Redirect to a success page or return JSON
-    res.json({
-      success: true,
-      sessionId: state,
-      message: 'Authentication successful! Use the sessionId in your API requests.',
-      example: 'Add header: X-Session-ID: ' + state
-    });
+    // Return a nice HTML page with the session ID
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Authentication Successful</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+          }
+          .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          }
+          .success {
+            color: #4caf50;
+            font-size: 24px;
+            margin-bottom: 20px;
+          }
+          .session-id {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+          }
+          pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+          }
+          .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #4285f4;
+            text-decoration: none;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="success">✓ Authentication Successful!</div>
+          
+          <h2>Your Session ID</h2>
+          <div class="session-id">${state}</div>
+          
+          <h2>How to Use</h2>
+          <p>Include this session ID in your API requests using the <code>X-Session-ID</code> header:</p>
+          
+          <h3>Example: List Tasks</h3>
+          <pre>curl https://${req.get('host')}/tasks \\
+  -H "X-Session-ID: ${state}"</pre>
+          
+          <h3>Example: Create a Task</h3>
+          <pre>curl -X POST https://${req.get('host')}/tasks \\
+  -H "X-Session-ID: ${state}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"title": "New Task", "notes": "Task description"}'</pre>
+          
+          <a href="/" class="back-link">← Back to Home</a>
+        </div>
+      </body>
+      </html>
+    `);
   } catch (error) {
     console.error('OAuth callback error:', error);
     res.status(500).json({ error: 'Authentication failed' });
