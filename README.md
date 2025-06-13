@@ -67,7 +67,7 @@ The server provides access to Google Tasks resources:
 2. [Enable the Google Tasks API](https://console.cloud.google.com/workspace-api/products)
 3. [Configure an OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) ("internal" is fine for testing)
 4. Add scopes `https://www.googleapis.com/auth/tasks`
-5. [Create an OAuth Client ID](https://console.cloud.google.com/apis/credentials/oauthclient) for application type "Desktop App"
+5. [Create an OAuth Client ID](https://console.cloud.google.com/apis/credentials/oauthclient) for application type "Desktop App" (for local MCP usage) or "Web Application" (for Railway deployment)
 6. Download the JSON file of your client's OAuth keys
 7. Rename the key file to `gcp-oauth.keys.json` and place into the root of this repo (i.e. `gcp-oauth.keys.json`)
 
@@ -106,3 +106,7 @@ To integrate this server with the desktop app, add the following to your app's s
   }
 }
 ```
+
+### Railway Deployment
+
+This server can also be deployed to Railway.com as a REST API. See [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md) for detailed instructions.

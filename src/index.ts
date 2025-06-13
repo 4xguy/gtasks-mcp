@@ -246,12 +246,47 @@ async function authenticateAndSaveCredentials() {
   );
 
   console.log(p);
-  const auth = await authenticate({
-    keyfilePath: p,
-    scopes: ["https://www.googleapis.com/auth/tasks"],
-  });
-  fs.writeFileSync(credentialsPath, JSON.stringify(auth.credentials));
-  console.log("Credentials saved. You can now run the server.");
+  
+  // Read the key file to check its type
+  const keyFileContent = JSON.parse(fs.readFileSync(p, 'utf-8'));
+  
+  if (keyFileContent.web) {
+    // Convert web client to installed client format for local auth
+    const installedClient = {
+      installed: {
+        client_id: keyFileContent.web.client_id,
+        client_secret: keyFileContent.web.client_secret,
+        auth_uri: keyFileContent.web.auth_uri,
+        token_uri: keyFileContent.web.token_uri,
+        auth_provider_x509_cert_url: keyFileContent.web.auth_provider_x509_cert_url,
+        redirect_uris: ["http://localhost:3000/oauth2callback", "urn:ietf:wg:oauth:2.0:oob"]
+      }
+    };
+    
+    // Write temporary installed client file
+    const tempPath = p.replace('.json', '-desktop.json');
+    fs.writeFileSync(tempPath, JSON.stringify(installedClient, null, 2));
+    
+    try {
+      const auth = await authenticate({
+        keyfilePath: tempPath,
+        scopes: ["https://www.googleapis.com/auth/tasks"],
+      });
+      fs.writeFileSync(credentialsPath, JSON.stringify(auth.credentials));
+      console.log("Credentials saved. You can now run the server.");
+    } finally {
+      // Clean up temp file
+      fs.unlinkSync(tempPath);
+    }
+  } else {
+    // Use as-is for desktop clients
+    const auth = await authenticate({
+      keyfilePath: p,
+      scopes: ["https://www.googleapis.com/auth/tasks"],
+    });
+    fs.writeFileSync(credentialsPath, JSON.stringify(auth.credentials));
+    console.log("Credentials saved. You can now run the server.");
+  }
 }
 
 async function loadCredentialsAndRunServer() {

@@ -2,3 +2,5 @@ node_modules
 dist
 .gtasks-server-credentials.json
 gcp-oauth.keys.json
+gcp-oauth.keys-*.json
+gcp-oauth-*.json
