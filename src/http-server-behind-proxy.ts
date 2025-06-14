@@ -5,10 +5,21 @@ import { google, tasks_v1 } from "googleapis";
 import { TaskActions, TaskResources } from "./Tasks.js";
 import fs from "fs";
 import path from "path";
+import cors from 'cors';
 
 const app = express();
 app.use(express.json());
 app.set('trust proxy', true); // Trust OAuth2 Proxy headers
+
+// Enable CORS for Railway private network
+app.use(cors({
+  origin: [
+    'http://oauth2-proxy.railway.internal',
+    'https://oauth2-proxy-production-9eaf.up.railway.app',
+    'http://localhost:4180'
+  ],
+  credentials: true
+}));
 
 const tasks = google.tasks("v1");
 
@@ -387,12 +398,13 @@ app.post('/tasks/clear', requireProxyAuth, async (req: AuthenticatedRequest, res
 
 // Start server on port 8080 (OAuth2 Proxy expects this)
 const PORT = parseInt(process.env.PORT || '8080', 10);
-const HOST = '0.0.0.0'; // Bind to all interfaces
+const HOST = '::'; // Bind to IPv6 for Railway private networking
 
 app.listen(PORT, HOST, () => {
-  console.log(`Google Tasks HTTP server (behind proxy) running on ${HOST}:${PORT}`);
+  console.log(`Google Tasks HTTP server (behind proxy) running on [${HOST}]:${PORT}`);
   console.log('Expecting OAuth2 Proxy headers: x-auth-request-email, x-auth-request-user');
   console.log(`External URL: ${process.env.OAUTH2_PROXY_EXTERNAL_URL || 'Not set'}`);
+  console.log('Listening on IPv6 for Railway private networking');
   
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     console.warn('WARNING: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set!');
