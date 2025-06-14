@@ -133,7 +133,9 @@ app.get('/setup-google-auth', requireProxyAuth, (req: AuthenticatedRequest, res)
     access_type: 'offline',
     scope: ['https://www.googleapis.com/auth/tasks'],
     state: req.userEmail, // Pass email in state
-    prompt: 'consent'
+    prompt: 'consent',
+    approval_prompt: 'force',
+    include_granted_scopes: false
   });
   
   res.redirect(authUrl);
