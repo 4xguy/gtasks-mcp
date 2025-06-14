@@ -26,6 +26,11 @@ OAUTH2_PROXY_EMAIL_DOMAINS="icvida.org"  # Your allowed email domains
 OAUTH2_PROXY_HTTP_ADDRESS=":4180"
 OAUTH2_PROXY_REDIRECT_URL="https://<your-oauth2-proxy-domain>/oauth2/callback"
 OAUTH2_PROXY_UPSTREAMS="http://{{gtasks-mcp.RAILWAY_PRIVATE_DOMAIN}}:8080"
+
+# IMPORTANT: The OAuth2 Proxy domain should be different from your MCP domain
+# For example:
+# - OAuth2 Proxy: https://gtasks-proxy.railway.app
+# - MCP Backend: https://gtasks-mcp.railway.app (but accessed via proxy)
 ```
 
 ### 2. Configure MCP Backend Service
