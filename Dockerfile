@@ -31,4 +31,4 @@ COPY --from=builder /app/package.json /app/package-lock.json /app
 RUN npm ci --omit=dev
 
 # Set the command to run the app
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/http-server-behind-proxy.js"]
