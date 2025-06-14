@@ -89,7 +89,7 @@ function requireProxyAuth(req: AuthenticatedRequest, res: express.Response, next
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      `${process.env.OAUTH2_PROXY_EXTERNAL_URL || 'http://localhost:4180'}/google-api-callback`
+      `${process.env.OAUTH2_PROXY_EXTERNAL_URL || 'https://oauth2-proxy-production-9eaf.up.railway.app'}/google-api-callback`
     );
     oauth2Client.setCredentials(tokens);
     google.options({ auth: oauth2Client });
@@ -126,7 +126,7 @@ app.get('/setup-google-auth', requireProxyAuth, (req: AuthenticatedRequest, res)
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `${process.env.OAUTH2_PROXY_EXTERNAL_URL || 'http://localhost:4180'}/google-api-callback`
+    `${process.env.OAUTH2_PROXY_EXTERNAL_URL || 'https://oauth2-proxy-production-9eaf.up.railway.app'}/google-api-callback`
   );
   
   const authUrl = oauth2Client.generateAuthUrl({
@@ -153,7 +153,7 @@ app.get('/google-api-callback', async (req, res) => {
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      `${process.env.OAUTH2_PROXY_EXTERNAL_URL || 'http://localhost:4180'}/google-api-callback`
+      `${process.env.OAUTH2_PROXY_EXTERNAL_URL || 'https://oauth2-proxy-production-9eaf.up.railway.app'}/google-api-callback`
     );
     
     const { tokens } = await oauth2Client.getToken(code as string);
